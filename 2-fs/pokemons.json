@@ -1,0 +1,8 @@
+[
+  { "name": "Pikachu", "level": 1 },
+  { "name": "Charmander", "level": 10 },
+  { "name": "Charizard", "level": 11 },
+  { "name": "Bulbasaur", "level": 16 },
+  { "name": "Trumpo", "level": 200 },
+  { "name": "Obamka", "level": 999 }
+]
