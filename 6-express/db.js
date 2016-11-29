@@ -25,10 +25,11 @@ class UserDb {
         );
     }
 
-    all() {
-        return Array.from(this.users
+    all({ offset = 0, limit = 10 }) {
+        let result = Array.from(this.users
             .values())
             .map(el => el.attributes);
+        return result.slice(offset, limit);
     }
 
     create(params) {
@@ -61,6 +62,11 @@ class UserDb {
     delete(id) {
         id = parseInt(id);
         return this.users.delete(id);
+    }
+
+    deleteAll() {
+        this.users.clear();
+        return this.users;
     }
 
     _generateId() {
