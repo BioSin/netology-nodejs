@@ -33,7 +33,7 @@ router.post('/users', (req, res) => {
 
     const model = db.create({name, score});
 
-    res.json(model.attributes);
+    res.status(201).json(model.attributes);
 });
 
 router.put('/users/:id', (req, res) => {
