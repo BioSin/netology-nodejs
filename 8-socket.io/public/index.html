@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Chat App</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container-fluid">
+    <div id="login-wrapper">
+        <h1>Introduce yourself</h1>
+        <form id="login-form">
+            <div class="form-group">
+                <label for="username-control">Username:</label>
+                <input type="text" class="form-control" id="username-control">
+            </div>
+            <div class="form-group">
+                <label for="room-control">Room:</label>
+                <input type="text" class="form-control" id="room-control" placeholder="General room">
+            </div>
+            <button type="submit" class="btn btn-default">Submit</button>
+        </form>
+    </div>
+    <div id="chat-wrapper" style="display: none">
+        <div id="chat-header"><h2></h2></div>
+        <div id="chat-body">
+
+        </div>
+        <div id="chat-form-wrapper" style="position:absolute; bottom: 0; width: 100%;">
+            <div class="row">
+                <form id="chat-message-form">
+                <div class="col-md-10">
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="send-message-control" placeholder="Your message...">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn success">Submit</button>
+                    <a class="btn btn-warning" id="logout-btn">Logout</a>
+                </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="//code.jquery.com/jquery-3.1.1.min.js"
+        integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script type="html/template" id="msg-tpl">
+    <div class="message">
+        <strong>::username::</strong> <span>::message::</span>
+    </div>
+</script>
+<script type="html/template" id="msg2-tpl">
+    <div class="message">
+        <strong>::username:: ::message::</strong>
+    </div>
+</script>
+
+<script>
+    $(function () {
+        var chat = io('http://localhost:3000'),
+            username, room,
+            $loginWrapper = $('#login-wrapper'),
+            $chatWrapper = $('#chat-wrapper'),
+            $chatHeader = $('#chat-header'),
+            $chatBody = $('#chat-body'),
+            $chatFormWrapper = $('#chat-form-wrapper'),
+            $chatForm = $('#chat-message-form'),
+            $sendMessageControl = $('#send-message-control'),
+            $msgTpl = $('#msg-tpl'),
+            $msg2Tpl = $('#msg2-tpl'),
+            $loginForm = $('#login-form'),
+            $usernameControl = $('#username-control'),
+            $roomControl = $('#room-control'),
+            $logoutBtn = $('#logout-btn');
+
+        $logoutBtn.on('click', function(e) {
+            e.preventDefault();
+            console.log('click logout')
+            window.location.reload();
+        });
+
+        chat.on('connect', function () {
+            chat.on('login success', function (data) {
+                $loginWrapper.fadeOut(function() {
+                    username = data.username;
+                    room = data.room;
+                    $chatHeader.find('h2').html(data.username + " : " + (data.room || 'General room' ));
+                    $chatWrapper.fadeIn();
+                });
+            });
+            chat.on('login failed', function (data) {
+                alert(data.message);
+                console.log('login failed', data);
+            });
+            chat.on('message', function (data) {
+                var tmp = $msgTpl.html();
+                tmp = tmp
+                    .replace("::username::", data.username)
+                    .replace("::message::", data.message);
+                $chatBody.append(tmp);
+            });
+
+            chat.on('user joined', function(data) {
+                var tmp = $msg2Tpl.html();
+                tmp = tmp
+                    .replace("::username::", data.username)
+                    .replace("::message::", "joined the room.");
+                $chatBody.append(tmp);
+            });
+
+            chat.on('user leaved', function(data) {
+                console.log('user leaved');
+                var tmp = $msg2Tpl.html();
+                tmp = tmp
+                    .replace("::username::", data.username)
+                    .replace("::message::", "leaved the room.");
+                $chatBody.append(tmp);
+            });
+
+            chat.on('disconnect', function () {
+                window.location.reload();
+            });
+        });
+
+        $chatForm.on('submit', function(e) {
+            e.preventDefault();
+
+            var msg = $sendMessageControl.val();
+            if(!msg.length) {
+                return;
+            }
+            console.log({ room: room, username: username, message: msg });
+            chat.emit('message', { room: room, username: username, message: msg });
+            $sendMessageControl.val('');
+        });
+
+        $loginForm.on('submit', function(e) {
+            e.preventDefault();
+            chat.emit('login', { username: $usernameControl.val(), room: $roomControl.val() });
+        });
+    })
+</script>
+
+</body>
+</html>
