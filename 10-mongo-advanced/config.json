@@ -1,0 +1,9 @@
+{
+  "mongo": {
+    "dsn": "mongodb://localhost:27017/netology",
+    "collection": "contact-book"
+  },
+  "express": {
+    "port": 3000
+  }
+}
